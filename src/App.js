@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import * as firebase from 'firebase'
-import RoomList from './components/RoomList.js';
-import MessageList from './components/MessageList.js';
 import './App.css';
+import * as firebase from 'firebase';
+import RoomList from './components/RoomList';
+import MessageList from './components/MessageList';
+import User from './components/User';
 
-
-  // Initialize Firebase
 var config = {
   apiKey: "AIzaSyBasKm1DfFkjbMblrak3L6FRbqsPkVMKOk",
   authDomain: "bloc-chat-react-557b3.firebaseapp.com",
@@ -19,23 +18,28 @@ firebase.initializeApp(config);
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      activeRoom : null
-    }
-    this.setActiveRoom = this.setActiveRoom.bind(this);
+    this.state = { activeRoom: '', user: '' };
+    this.activateRoom = this.activateRoom.bind(this);
   }
 
-  setActiveRoom(room) {
-    this.setState({activeRoom: room});
+  activateRoom(room) {
+    this.setState({ activeRoom: room });
+  }
+
+  setUser(user) {
+    this.setState({ user: user });
   }
 
   render() {
-    return(
-      <div>
-        <RoomList firebase={firebase} activeRoom={this.state.activeRoom} setActiveRoom={this.setActiveRoom} />
-        <MessageList firebase={firebase} activeRoom={this.state.activeRoom} />
+    return (
+      <div className="App">
+        <main>
+        </main>
+        < User firebase={firebase} setUser={this.setUser.bind(this)} user={this.state.user} />
+        < RoomList firebase={firebase} activeRoom={this.state.activeRoom} activateRoom={this.activateRoom.bind(this)}/>
+        < MessageList firebase={firebase} activeRoom={this.state.activeRoom} user={this.state.user} activateRoom={this.activateRoom.bind(this)}/>
       </div>
-    )
+    );
   }
 }
 

@@ -1,81 +1,77 @@
 import React, { Component } from 'react';
 
-
 class MessageList extends Component {
-  constructor (props) {
-    super(props)
+
+  constructor(props) {
+    super(props);
     this.state = {
-      allMessages: [],
-      displayedMessages: [],
-      newMessageText: ''
-    }
-    this.messagesRef = this.props.firebase.database().ref('messages')
-    this.handleChange = this.handleChange.bind(this);
+      messages: [],
+      currentRoomMessages: [],
+      newMessageContent: ''
+    };
+    this.messagesRef = this.props.firebase.database().ref('messages');
+    this.createMessage = this.createMessage.bind(this);
+    this.handleContentChange = this.handleContentChange.bind(this);
+    this.filterAndDisplayMessages = this.filterAndDisplayMessages.bind(this);
   }
 
   componentDidMount() {
-    this.messagesRef.on('child_added', snapshot  => {
+    this.messagesRef.on('child_added', snapshot => {
       const message = snapshot.val();
       message.key = snapshot.key;
-      this.setState({ allMessages: this.state.allMessages.concat( message ) }, () => {
-        this.showMessages( this.props.activeRoom )
-      });
-    });
-    this.messagesRef.on('child_removed', snapshot  => {
-      this.setState({ allMessages: this.state.allMessages.filter( message => message.key !== snapshot.key )  }, () => {
-        this.showMessages( this.props.activeRoom )
-      });
+      this.setState({ messages: this.state.messages.concat( message ) });
     });
   }
 
   componentWillReceiveProps(nextProps) {
-    this.showMessages( nextProps.activeRoom );
+    if (nextProps.activeRoom !== this.props.activeRoom) {
+      this.filterAndDisplayMessages( nextProps.activeRoom );
+    }
   }
 
-  createMessage(newMessageText) {
-    this.messagesRef.push({
-        username: this.props.user ? this.props.user.displayName : 'Guest',
-        content: newMessageText,
-        sentAt: this.props.firebase.database.ServerValue.TIMESTAMP,
+
+  createMessage(newMessageContent) {
+    const date = new Date();
+    if (!this.props.activeRoom || !this.props.user) {alert('Please select a room to send a message.')}
+    if (newMessageContent.length > 1) {
+      this.messagesRef.push({
+        content: this.state.newMessageContent,
         roomId: this.props.activeRoom.key,
+        sentAt: [date.toLocaleDateString(), date.toLocaleTimeString()],
+        username: this.props.user.displayName
       });
-    this.setState({ newMessageText: '' });
+    } else {
+      alert('Message must contain at least 1 character.');
+    }
+    this.setState({ newMessageContent: '' });
   }
 
-  handleChange(e) {
-    e.preventDefault();
-    this.setState({newMessageText: e.target.value });
+  handleContentChange(event) {
+    event.preventDefault();
+    this.setState({newMessageContent: event.target.value });
   }
 
-  removeMessage(activeRoom) {
-    this.messagesRef.child(activeRoom.key).remove();
-  }
-
-  showMessages(activeRoom) {
-    this.setState({ displayedMessages: this.state.allMessages.filter( message => message.roomId === activeRoom.key ) });
+  filterAndDisplayMessages(activeRoom) {
+    this.setState({ currentRoomMessages: this.state.messages.filter(message => message.roomId === activeRoom.key) });
   }
 
   render() {
     return (
-      <main id="messages-component">
-        <h2 className="room-name">{ this.props.activeRoom ? this.props.activeRoom.name : '' }</h2>
-        <ul id="message-list">
-          {this.state.displayedMessages.map( message =>
-            <li className="message-info" key={message.key}>
-                <div className="username">
-                  { message.username }
-                </div>
-	        <div className="content">
-	  	  { message.content }
-		</div>
-            </li>
-          )}
-        </ul>
-        <form id="create-message" onSubmit={ (e) => { e.preventDefault(); this.createMessage(this.state.newMessageText) } }>
-          <input type="text" value={ this.state.newMessageText } onChange={ this.handleChange } />
-          <input type="submit" value="Send"/>
+      <div className="messages">
+
+        <h2>Messages</h2>
+        <form className="create-message" onSubmit={() => this.createMessage(this.state.newMessageContent)} >
+          <input type="text" value={this.state.newMessageContent} onChange={this.handleContentChange} />
+          <button type="submit">Send Message</button>
         </form>
-      </main>
+        <div className="messages-list">
+          {this.state.currentRoomMessages.map(message =>
+            <div key={message.key} className="message">
+              <h5>{message.username} on {message.sentAt[0]} at {message.sentAt[1]} - {message.content}</h5>
+            </div>
+          )}
+        </div>
+      </div>
     );
   }
 }
