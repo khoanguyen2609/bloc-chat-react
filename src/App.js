@@ -16,28 +16,48 @@ var config = {
 firebase.initializeApp(config);
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { activeRoom: '', user: '' };
-    this.activateRoom = this.activateRoom.bind(this);
-  }
+constructor(props){
+  super(props)
 
-  activateRoom(room) {
-    this.setState({ activeRoom: room });
-  }
+  this.state = {
+    currentRoom: '',
+    user: null
+  };
+}
 
-  setUser(user) {
-    this.setState({ user: user });
-  }
+setCurrentRoom(room ) {
+  this.setState({currentRoom: room})
+}
+
+setUser(user){
+  if (user === null ) {
+    return this.setState({ user: "Guest"})
+  } else return this.setState({user: user.displayName})
+}
 
   render() {
+
+    const showMessages = this.state.currentRoom;
+
     return (
-      <div className="App">
+      <div className='App'>
+        <header>
+          <h1>Current Room:  {this.state.currentRoom.name}</h1>
+          <h3>
+            <User firebase = {firebase} setUser={this.setUser.bind(this)} user={this.state.user} />
+          </h3>
+        </header>
+
+        <aside>
+          <RoomList firebase={firebase} currentRoom={this.setCurrentRoom.bind(this)}/>
+        </aside>
+
         <main>
+
+          <div id="messagePlane">
+            {showMessages ? (<MessageList firebase={firebase} currentRoom={this.state.currentRoom.key} user={this.state.user} />) : (null) }
+          </div>
         </main>
-        < User firebase={firebase} setUser={this.setUser.bind(this)} user={this.state.user} />
-        < RoomList firebase={firebase} activeRoom={this.state.activeRoom} activateRoom={this.activateRoom.bind(this)}/>
-        < MessageList firebase={firebase} activeRoom={this.state.activeRoom} user={this.state.user} activateRoom={this.activateRoom.bind(this)}/>
       </div>
     );
   }

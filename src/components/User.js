@@ -1,31 +1,53 @@
 import React, { Component } from 'react';
 
-class User extends Component {
 
-  componentDidMount() {
-    this.props.firebase.auth().onAuthStateChanged( user => {
-      this.props.setUser(user);
+class User extends Component {
+  constructor(props){
+  super(props);
+
+    this.userSignIn.bind(this);
+    this.userSignOut.bind(this);
+
+    }
+
+
+  userSignIn(){
+    const provider = new this.props.firebase.auth.GoogleAuthProvider();
+    this.props.firebase.auth().signInWithPopup( provider ).then((result) => {
+      console.log(this.props.user);
     });
   }
 
-  signIn() {
-    const provider = new this.props.firebase.auth.GoogleAuthProvider();
-    this.props.firebase.auth().signInWithPopup(provider);
+  userSignOut(){
+    this.props.firebase.auth().signOut().then((result) => {
+      console.log("sign out successful");
+      this.props.setUser(null);
+    });
   }
 
-  signOut() {
-    this.props.firebase.auth().signOut();
+  componentDidMount(){
+    this.props.firebase.auth().onAuthStateChanged(user => {
+      this.props.setUser(user);
+    })
   }
 
-  render() {
-
+  render () {
     return (
-      <div className="user">
-        <div className="user-name">{ this.props.user ? 'Signed in as ' + this.props.user.displayName : 'Welcome, Guest!' }</div>
-        <button className="sign-in-button" onClick={ this.props.user ?  this.signOut.bind(this) : this.signIn.bind(this)}>{ this.props.user? 'Sign Out' : 'Google Sign In'}</button>
-      </div>
+
+      <section>
+        <div id="user-name">{this.props.user}</div>
+
+        {this.props.user === 'Guest' ?
+            <button id="sign-in" onClick={() => this.userSignIn()}>Sign In</button>
+          :
+            <button id="sign-out" onClick={() => this.userSignOut()}>Sign Out</button>
+          }
+          {console.log(this.props.user)}
+      </section>
+
     );
   }
+
 }
 
 export default User;
